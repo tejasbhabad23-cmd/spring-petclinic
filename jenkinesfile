@@ -40,7 +40,7 @@ pipeline {
     post {
         success
         {
-            mail bcc: '', 
+            email bcc: '', 
             body: """Hello Team,
 Greetings of the day!
 
@@ -60,7 +60,7 @@ DevOps Team""",
         }
         failure
         {
-            mail bcc: '', 
+            email bcc: '', 
             body: """Hello Team,
 Greetings of the day!
 
