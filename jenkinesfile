@@ -1,89 +1,98 @@
+ 
 pipeline {
     agent any
-    parameters
-    {
-      string(name: 'pet', defaultValue: 'pet-app', description: 'spring-app')  
+
+    parameters {
+        string(
+            name: 'pet',
+            defaultValue: 'pet-app',
+            description: 'spring-app'
+        )
     }
-    triggers
-    {
+
+    triggers {
         pollSCM('*/2 * * * *')
     }
-    environment
-    {
+
+    environment {
         APP_NAME = "Spring-petclinic"
         DEV_TEAM = 'tejasbhabad23@gmail.com'
         BUILD_INFO = "Job_Name: ${env.JOB_NAME}\nBuild_Number: ${env.BUILD_NUMBER}"
     }
+
     tools {
-      jdk "jdk-21"
-      maven "Maven"
+        jdk "jdk-21"
+        maven "Maven"
     }
-    options
-    {
+
+    options {
         buildDiscarder(logRotator(numToKeepStr: '5'))
     }
+
     stages {
         stage('Hello') {
             steps {
-                 git branch: 'main', url: 'https://github.com/spring-projects/spring-petclinic.git'
+                git branch: 'main',
+                    url: 'https://github.com/spring-projects/spring-petclinic.git'
             }
         }
-        stage ('Package') 
-            {
-              steps
-             {
-                 bat 'mvn package -DskipTests'
-                 archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
-              }
+
+        stage('Package') {
+            steps {
+                bat 'mvn package -DskipTests'
+
+                archiveArtifacts artifacts: 'target/*.jar',
+                    fingerprint: true
             }
+        }
     }
+
     post {
-        success
-        {
-            mail bcc: '', 
-            body: """Hello Team,
+        success {
+            emailext(
+                body: """Hello Team,
 Greetings of the day!
 
-The Jenkins build has succeeded
-${env.BUILD_INFO}
-Build URL : ${env.BUILD_URL}
-Console logs : ${env.BUILD_URL}console
-Artifacts Download : ${env.BUILD_URL}artifact/target/
+The Jenkins build has succeeded.
 
-Regrads,
+${env.BUILD_INFO}
+
+Build URL: ${env.BUILD_URL}
+Console logs: ${env.BUILD_URL}console
+Artifacts Download: ${env.BUILD_URL}artifact/target/
+
+Regards,
 DevOps Team""",
-            cc: """${env.DEV_TEAM}""",
-            from: '', 
-            replyTo: '', 
-            subject: """Jenkins Build Success: ${env.APP_NAME}""", 
-            to: 'tejasbhabad23@gmail.com'
+
+                subject: "Jenkins Build Success: ${env.APP_NAME}",
+                to: "${env.DEV_TEAM}"
+            )
         }
-        failure
-        {
-            mail bcc: '', 
-            body: """Hello Team,
+
+        failure {
+            emailext(
+                body: """Hello Team,
 Greetings of the day!
 
 The Jenkins build has Failed!
-Please check the logs to resolve it !!
+Please check the logs to resolve it.
 
 ${env.BUILD_INFO}
-Build URL : ${env.BUILD_URL}
-Console logs : ${env.BUILD_URL}console
-Artifacts Download : ${env.BUILD_URL}artifact/target/
 
-Regrads,
+Build URL: ${env.BUILD_URL}
+Console logs: ${env.BUILD_URL}console
+
+Regards,
 DevOps Team""",
-            cc: """${env.DEV_TEAM}""",
-            from: '', 
-            replyTo: '', 
-            subject: """Jenkins Build Failed: ${env.APP_NAME}""", 
-            to: 'tejasbhabad23@gmail.com'
+
+                subject: "Jenkins Build Failed: ${env.APP_NAME}",
+                to: "${env.DEV_TEAM}"
+            )
         }
-        always
-        {
+
+        always {
             echo "Cleaning the workspace..."
             cleanWs()
         }
     }
-} 
+}
